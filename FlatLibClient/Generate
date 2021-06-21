@@ -1,0 +1,33 @@
+#!/bin/bash
+
+## Build the plugins
+if [ ! -d grpc-swift ]; then
+	echo Install grpc-swift
+	git clone -b 1.1.0 https://github.com/grpc/grpc-swift.git
+	cd grpc-swift
+	make plugins
+	cd ../
+fi
+
+export PATH=:$PWD/grpc-swift:$PATH
+protoc-gen-swift --version
+
+if ! command -v protoc $> /dev/null
+then
+	echo Please install protoc
+	echo https://grpc.io/docs/protoc-installation/
+else
+	protoc --version
+fi
+
+proto=$PWD/proto
+generated=$PWD/Sources/generated
+
+# Add pull git logic
+
+if [[ ! -d $generated ]]
+then
+    mkdir $generated
+fi
+
+protoc $proto/FileService.proto --proto_path=$proto --swift_opt=Visibility=Public --swift_out=$generated --grpc-swift_opt=Visibility=Public --grpc-swift_out=Client=true,Server=false:$generated
